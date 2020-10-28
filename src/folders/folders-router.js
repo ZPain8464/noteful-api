@@ -3,10 +3,10 @@ const express = require("express");
 const FoldersService = require("./folders-service");
 
 const foldersRouter = express.Router();
-const jsonParser = express.json();
+const bodyParser = express.json();
 
 const serializeFolder = (folder) => ({
-  id: JSON.stringify(folder.id),
+  id: folder.id,
   folder_name: folder.folder_name,
 });
 
@@ -21,7 +21,7 @@ foldersRouter
       })
       .catch(next);
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(bodyParser, (req, res, next) => {
     const { folder_name } = req.body;
     const newFolder = { folder_name };
 
@@ -41,7 +41,6 @@ foldersRouter
           .status(201)
           .location(path.posix.join(req.originalUrl, `/${folder.id}`))
           .json(folder);
-        console.log(folder);
       })
       .catch(next);
   });
@@ -63,6 +62,35 @@ foldersRouter
   })
   .get((req, res, next) => {
     res.json(res.folder);
+  })
+  .delete((req, res, next) => {
+    FoldersService.deleteFolder(req.app.get("db"), req.params.folderid)
+      .then((numRowsAffected) => {
+        res.status(204).end();
+      })
+      .catch(next);
+  })
+  .patch(bodyParser, (req, res, next) => {
+    const { folder_name } = req.body;
+    const folderToUpdate = { folder_name };
+
+    const numberOfValues = Object.values(folderToUpdate).filter(Boolean).length;
+    if (numberOfValues === 0) {
+      logger.error(`Invalid update without required fields`);
+      return res.status(400).json({
+        error: { message: `Request body must contain 'name'` },
+      });
+    }
+
+    FoldersService.updateFolder(
+      req.app.get("db"),
+      req.params.folderid,
+      folderToUpdate
+    )
+      .then((numRowsAffected) => {
+        res.status(204).end();
+      })
+      .catch(next);
   });
 
 module.exports = foldersRouter;

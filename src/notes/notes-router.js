@@ -8,10 +8,10 @@ const notesRouter = express.Router();
 const bodyParser = express.json();
 
 const serializeNote = (note) => ({
-  id: JSON.stringify(note.id),
+  id: note.id,
   title: note.title,
   content: note.content,
-  folder_id: JSON.stringify(note.folder_id),
+  folder_id: note.folder_id,
   date_published: note.date_published,
 });
 
@@ -72,7 +72,9 @@ notesRouter
   })
   .patch(bodyParser, (req, res, next) => {
     const { id, content, title } = req.body;
+
     const noteToUpdate = { id, content, title };
+    // console.log(noteToUpdate);
 
     const numberOfValues = Object.values(noteToUpdate).filter(Boolean).length;
     if (numberOfValues === 0) {
